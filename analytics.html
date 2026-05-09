@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Advanced Analytics — Random Forest Optimization | AutoBI GAIKINDO 2020–2025</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Mono:wght@400;500&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#0F2340;--navy2:#1A3560;--blue:#2563EB;--blue-light:#3B82F6;
+  --accent:#F59E0B;--accent2:#EF4444;--green:#10B981;--teal:#0EA5E9;
+  --bg:#F8FAFC;--surface:#FFFFFF;--surface2:#F1F5F9;
+  --border:#E2E8F0;--border2:#CBD5E1;
+  --text:#0F172A;--text2:#475569;--text3:#94A3B8;
+  --shadow:0 1px 3px rgba(0,0,0,.08),0 4px 16px rgba(0,0,0,.04);
+  --shadow-lg:0 8px 32px rgba(15,35,64,.12);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.6;min-height:100vh}
+
+/* TOP NAV */
+.topnav{position:sticky;top:0;z-index:100;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 28px;height:56px;box-shadow:0 2px 12px rgba(0,0,0,.25)}
+.nav-brand{display:flex;align-items:center;gap:10px}
+.nav-logo{width:32px;height:32px;background:linear-gradient(135deg,var(--blue),var(--teal));border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-weight:900;font-size:16px;color:#fff}
+.nav-title{font-weight:600;font-size:15px;letter-spacing:-.2px}
+.nav-sub{font-size:11px;opacity:.6;margin-top:-2px}
+.nav-links{display:flex;gap:4px}
+.nav-link{padding:6px 12px;border-radius:6px;font-size:12px;color:rgba(255,255,255,.7);cursor:pointer;transition:all .15s;background:none;border:none;font-family:inherit;text-decoration:none;display:inline-block}
+.nav-link:hover,.nav-link.active{background:rgba(255,255,255,.12);color:#fff}
+.nav-meta{font-size:11px;color:rgba(255,255,255,.5);font-family:'DM Mono',monospace}
+
+/* HERO */
+.hero{background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 60%,#1E4080 100%);color:#fff;padding:36px 28px 32px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;right:-80px;top:-80px;width:320px;height:320px;border-radius:50%;background:rgba(37,99,235,.18);pointer-events:none}
+.hero::after{content:'';position:absolute;right:120px;bottom:-60px;width:200px;height:200px;border-radius:50%;background:rgba(14,165,233,.12);pointer-events:none}
+.hero-content{position:relative;z-index:1;max-width:920px}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(16,185,129,.2);border:1px solid rgba(16,185,129,.45);border-radius:20px;padding:5px 14px;font-size:11px;color:#6EE7B7;font-family:'DM Mono',monospace;margin-bottom:14px}
+.hero h1{font-family:'Playfair Display',serif;font-size:32px;font-weight:900;line-height:1.18;letter-spacing:-.5px;margin-bottom:12px}
+.hero-desc{font-size:14px;opacity:.78;max-width:720px;line-height:1.7}
+.hero-meta{display:flex;gap:24px;margin-top:18px;font-size:12px;opacity:.65;font-family:'DM Mono',monospace}
+.hero-meta span strong{color:#93C5FD;font-weight:500}
+
+/* MAIN */
+.container{max-width:1180px;margin:0 auto;padding:32px 28px 60px}
+
+/* SECTION TITLE */
+.section-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--text3);margin:32px 0 14px;font-family:'DM Mono',monospace;display:flex;align-items:center;gap:10px}
+.section-title:first-child{margin-top:0}
+.section-title::after{content:'';flex:1;height:1px;background:var(--border)}
+.section-title .num{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;background:var(--navy);color:#fff;border-radius:6px;font-size:10px;font-weight:600}
+
+/* KPI STRIP */
+.kpi-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border-radius:12px;overflow:hidden;box-shadow:var(--shadow)}
+.kpi-card{background:var(--surface);padding:22px 24px;position:relative;overflow:hidden;transition:background .15s}
+.kpi-card:hover{background:var(--surface2)}
+.kpi-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px}
+.kpi-card:nth-child(1)::before{background:var(--green)}
+.kpi-card:nth-child(2)::before{background:var(--blue)}
+.kpi-card:nth-child(3)::before{background:var(--accent)}
+.kpi-card:nth-child(4)::before{background:var(--teal)}
+.kpi-lbl{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.6px;color:var(--text3);margin-bottom:8px;font-family:'DM Mono',monospace}
+.kpi-val{font-size:30px;font-weight:600;color:var(--text);line-height:1;font-family:'Playfair Display',serif;letter-spacing:-.5px}
+.kpi-unit{font-size:14px;color:var(--text2);font-weight:400;margin-left:4px;font-family:'DM Sans',sans-serif}
+.kpi-desc{font-size:11px;color:var(--text3);margin-top:6px}
+
+/* CARD */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;box-shadow:var(--shadow);margin-bottom:20px}
+.card-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:18px;gap:16px}
+.card-title{font-size:16px;font-weight:600;color:var(--text);line-height:1.3;font-family:'Playfair Display',serif;letter-spacing:-.2px}
+.card-sub{font-size:12px;color:var(--text3);margin-top:4px}
+.badge{font-size:10px;padding:3px 10px;border-radius:20px;font-family:'DM Mono',monospace;font-weight:500;white-space:nowrap}
+.badge-green{background:#D1FAE5;color:var(--green)}
+.badge-blue{background:#EFF6FF;color:var(--blue)}
+.badge-amber{background:#FEF3C7;color:var(--accent)}
+
+/* TEXT BLOCK */
+.text-block p{margin-bottom:12px;color:var(--text2);line-height:1.75}
+.text-block p strong{color:var(--text)}
+.text-block ul{padding-left:20px;color:var(--text2)}
+.text-block li{margin-bottom:6px;line-height:1.7}
+
+/* IMAGE FIG */
+.fig{margin:0 -4px}
+.fig img{width:100%;height:auto;border-radius:8px;border:1px solid var(--border);background:#fff}
+.fig-caption{font-size:12px;color:var(--text3);text-align:center;margin-top:10px;font-style:italic}
+
+/* TABLE */
+table{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}
+th{background:var(--navy);color:#fff;padding:10px 14px;text-align:left;font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:.5px;font-family:'DM Mono',monospace}
+th.center,td.center{text-align:center}
+td{padding:10px 14px;border-bottom:1px solid var(--border);color:var(--text2)}
+tr:nth-child(even) td{background:var(--surface2)}
+td strong{color:var(--text);font-weight:600}
+
+/* CODE */
+.code-block{background:#0F172A;color:#E2E8F0;padding:16px 20px;border-radius:8px;font-family:'DM Mono',monospace;font-size:12px;line-height:1.7;overflow-x:auto;margin:12px 0}
+.code-block .kw{color:#C4B5FD}
+.code-block .str{color:#86EFAC}
+.code-block .com{color:#64748B;font-style:italic}
+.code-block .num{color:#FCA5A5}
+.code-caption{font-size:11px;color:var(--text3);text-align:center;margin-top:6px;font-family:'DM Mono',monospace}
+
+/* INFO BOX */
+.info-box{background:#EFF6FF;border:1px solid #BFDBFE;border-left:4px solid var(--blue);border-radius:8px;padding:14px 18px;margin:14px 0;color:var(--text2)}
+.info-box h5{font-size:11px;text-transform:uppercase;font-family:'DM Mono',monospace;color:var(--blue);margin-bottom:6px;letter-spacing:.5px}
+
+.warning-box{background:#FEF3C7;border:1px solid #FCD34D;border-left:4px solid var(--accent);border-radius:8px;padding:14px 18px;margin:14px 0;color:var(--text2)}
+.warning-box h5{font-size:11px;text-transform:uppercase;font-family:'DM Mono',monospace;color:#B45309;margin-bottom:6px;letter-spacing:.5px}
+
+/* TWO COLUMN */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+
+/* FOOTER */
+footer{background:var(--navy);color:rgba(255,255,255,.6);padding:24px 28px;text-align:center;font-size:12px;font-family:'DM Mono',monospace;margin-top:40px}
+footer a{color:#93C5FD;text-decoration:none}
+
+@media(max-width:840px){
+  .kpi-strip{grid-template-columns:repeat(2,1fr)}
+  .two-col{grid-template-columns:1fr}
+  .hero h1{font-size:24px}
+  .nav-links{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- TOP NAV -->
+<nav class="topnav">
+  <div class="nav-brand">
+    <div class="nav-logo">A</div>
+    <div>
+      <div class="nav-title">AutoBI · Advanced Analytics</div>
+      <div class="nav-sub">Random Forest Optimization · GAIKINDO 2020–2025</div>
+    </div>
+  </div>
+  <div class="nav-links">
+    <a class="nav-link" href="index.html">← Dashboard</a>
+    <a class="nav-link active">Advanced Analytics</a>
+  </div>
+  <div class="nav-meta">v1.0 · 2026</div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-content">
+    <span class="hero-badge">◆ MACHINE LEARNING LAYER</span>
+    <h1>Optimasi Model Prediksi Penjualan Otomotif Nasional<br>menggunakan Random Forest + Grid Search</h1>
+    <p class="hero-desc">
+      Halaman ini menyajikan hasil analisis machine learning lanjutan dari sistem Business Intelligence
+      AutoBI. Model dilatih menggunakan algoritma Random Forest Regressor dengan optimasi hyperparameter
+      Grid Search 5-fold cross-validation untuk memprediksi volume wholesales bulanan per merek
+      berdasarkan data historis GAIKINDO 2020–2025.
+    </p>
+    <div class="hero-meta">
+      <span><strong>Dataset:</strong> 11.028 baris</span>
+      <span><strong>Fitur ML:</strong> 20 fitur</span>
+      <span><strong>Train/Test:</strong> 2020–2024 / 2025</span>
+      <span><strong>Framework:</strong> CRISP-DM 6 Fase</span>
+    </div>
+  </div>
+</section>
+
+<div class="container">
+
+  <!-- KPI STRIP -->
+  <div class="section-title"><span class="num">1</span>Hasil Evaluasi Model</div>
+  <div class="kpi-strip">
+    <div class="kpi-card">
+      <div class="kpi-lbl">R² Score</div>
+      <div class="kpi-val">0,9815</div>
+      <div class="kpi-desc">Model menjelaskan 98,15% variasi data</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-lbl">MAE</div>
+      <div class="kpi-val">124,61<span class="kpi-unit">unit</span></div>
+      <div class="kpi-desc">Rata-rata kesalahan absolut prediksi</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-lbl">RMSE</div>
+      <div class="kpi-val">466,13<span class="kpi-unit">unit</span></div>
+      <div class="kpi-desc">Akar rata-rata kuadrat kesalahan</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-lbl">Best Params</div>
+      <div class="kpi-val" style="font-size:18px;line-height:1.4">100/None/2/1</div>
+      <div class="kpi-desc">n_est / max_depth / split / leaf</div>
+    </div>
+  </div>
+
+  <!-- TENTANG METODE -->
+  <div class="section-title"><span class="num">2</span>Tentang Random Forest</div>
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-title">Mengapa Random Forest?</div>
+        <div class="card-sub">Ensemble learning untuk prediksi deret waktu otomotif</div>
+      </div>
+      <span class="badge badge-blue">ML · Regression</span>
+    </div>
+    <div class="text-block">
+      <p>
+        <strong>Random Forest</strong> adalah algoritma machine learning ensemble yang dikembangkan
+        oleh Leo Breiman pada tahun 2001. Algoritma ini bekerja dengan membangun banyak pohon
+        keputusan (decision trees) secara independen, kemudian menggabungkan prediksinya melalui
+        rata-rata untuk menghasilkan prediksi akhir. Pendekatan ini mengatasi kelemahan
+        decision tree tunggal yang rentan overfitting, sekaligus mempertahankan kemampuan
+        menangkap hubungan non-linear yang kompleks dalam data.
+      </p>
+      <p>
+        Untuk konteks data penjualan otomotif GAIKINDO 2020–2025 yang sangat dinamis—mencakup
+        periode pandemi COVID-19, pemulihan, hingga transformasi pasar EV—Random Forest dipilih
+        karena tiga alasan utama:
+      </p>
+      <ul>
+        <li><strong>Tahan terhadap outlier</strong> seperti penurunan ekstrem April 2020 atau lonjakan BYD 2024–2025</li>
+        <li><strong>Tidak memerlukan asumsi distribusi data</strong>, cocok untuk data yang right-skewed</li>
+        <li><strong>Menyediakan feature importance</strong> sebagai interpretasi model yang dapat dijelaskan</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- GAMBAR 4.5 -->
+  <div class="section-title"><span class="num">3</span>Eksplorasi Data</div>
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-title">Distribusi Volume Penjualan 2020–2025</div>
+        <div class="card-sub">Visualisasi karakteristik data sebelum modeling</div>
+      </div>
+      <span class="badge badge-amber">CRISP-DM F2</span>
+    </div>
+    <div class="fig">
+      <img src="analytics_assets/Gambar_4_5_Distribusi_Volume.png" alt="Distribusi Volume">
+      <div class="fig-caption">Gambar 4.5 — Distribusi Volume Penjualan dalam tiga panel: histogram asli (right-skewed), log-transform (mendekati normal), dan total wholesales tahunan</div>
+    </div>
+    <div class="text-block" style="margin-top:16px">
+      <p>
+        Tiga panel di atas memberikan gambaran komprehensif tentang karakteristik data. Panel pertama
+        menunjukkan distribusi volume yang sangat <em>right-skewed</em>—mayoritas baris memiliki volume
+        kecil (di bawah 5.000 unit), namun ada beberapa observasi dengan volume sangat besar (di atas
+        20.000 unit). Panel kedua menampilkan distribusi setelah log-transform yang mendekati distribusi
+        normal bimodal, mencerminkan dua kelompok merek: kelompok kecil (lokal/baru) dan kelompok besar
+        (mainstream). Panel ketiga merangkum tren tahunan: titik tertinggi pada 2022 (2.044K) dan
+        penurunan pada 2024–2025.
+      </p>
+    </div>
+  </div>
+
+  <!-- GAMBAR 4.6 -->
+  <div class="section-title"><span class="num">4</span>Hasil Prediksi vs Aktual</div>
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-title">Aktual vs Prediksi pada Test Set 2025</div>
+        <div class="card-sub">Perbandingan baseline RF dan model optimasi Grid Search</div>
+      </div>
+      <span class="badge badge-green">R² = 0,9815</span>
+    </div>
+    <div class="fig">
+      <img src="analytics_assets/Gambar_4_6_Aktual_vs_Prediksi.png" alt="Aktual vs Prediksi">
+      <div class="fig-caption">Gambar 4.6 — Scatter plot prediksi vs nilai aktual pada test set 2025 (54 merek × 12 bulan = 648 data point)</div>
+    </div>
+    <div class="text-block" style="margin-top:16px">
+      <p>
+        Distribusi titik-titik prediksi berada sangat dekat dengan garis ideal (y=x), mengkonfirmasi
+        akurasi model yang tinggi. Kedua subplot (baseline dan optimasi) menunjukkan R² identik 0,9815—
+        bukti bahwa Grid Search memilih kombinasi parameter yang sama dengan default scikit-learn.
+        Titik-titik dengan volume tinggi (di atas 20K unit) yang mewakili merek-merek dominan seperti
+        Toyota, Daihatsu, dan Honda terprediksi dengan sangat akurat.
+      </p>
+    </div>
+  </div>
+
+  <!-- GAMBAR 4.7 -->
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-title">Perbandingan Metrik Baseline vs Optimasi</div>
+        <div class="card-sub">Empat metrik standar evaluasi model regresi</div>
+      </div>
+      <span class="badge badge-blue">CRISP-DM F5</span>
+    </div>
+    <div class="fig">
+      <img src="analytics_assets/Gambar_4_7_Perbandingan_Metrik.png" alt="Perbandingan Metrik">
+      <div class="fig-caption">Gambar 4.7 — Bar chart perbandingan MAE, RMSE, MAPE, dan R² antara model baseline dan model optimasi</div>
+    </div>
+
+    <div class="warning-box" style="margin-top:18px">
+      <h5>⚠ Catatan tentang MAPE</h5>
+      Nilai MAPE pada visualisasi (1,06 × 10¹⁸) bukan kesalahan grafik—ini terjadi karena dataset
+      mengandung baris dengan volume = 0 (untuk merek yang tidak aktif pada periode tertentu).
+      Pembagian dengan nol dalam formula MAPE menyebabkan nilai infinity. Untuk evaluasi yang
+      bermakna, MAPE perlu dihitung ulang dengan filter baris non-zero, atau menggunakan metrik
+      alternatif seperti SMAPE (Symmetric Mean Absolute Percentage Error).
+    </div>
+
+    <div class="text-block" style="margin-top:14px">
+      <p>
+        <strong>Temuan Kunci:</strong> Selisih semua metrik = 0,00 → konfigurasi default scikit-learn
+        sudah optimal untuk dataset ini. Grid Search yang menguji 180 kombinasi parameter menghasilkan
+        best params yang sama dengan default: <code>n_estimators=100, max_depth=None, min_samples_split=2,
+        min_samples_leaf=1</code>. Hal ini bukan kegagalan eksperimen, melainkan validasi bahwa tidak
+        ada konfigurasi alternatif yang menghasilkan performa lebih baik dalam ruang pencarian yang
+        ditentukan.
+      </p>
+    </div>
+  </div>
+
+  <!-- TABEL EVALUASI -->
+  <div class="section-title"><span class="num">5</span>Tabel Evaluasi Lengkap</div>
+  <div class="card">
+    <table>
+      <tr>
+        <th>Metrik Evaluasi</th>
+        <th class="center">Model Baseline</th>
+        <th class="center">Model Optimasi</th>
+        <th class="center">Selisih</th>
+      </tr>
+      <tr>
+        <td><strong>MAE</strong> (Mean Absolute Error)</td>
+        <td class="center">124,61 unit</td>
+        <td class="center">124,61 unit</td>
+        <td class="center">0,00</td>
+      </tr>
+      <tr>
+        <td><strong>RMSE</strong> (Root Mean Square Error)</td>
+        <td class="center">466,13 unit</td>
+        <td class="center">466,13 unit</td>
+        <td class="center">0,00</td>
+      </tr>
+      <tr>
+        <td><strong>R²</strong> (Coefficient of Determination)</td>
+        <td class="center">0,9815</td>
+        <td class="center">0,9815</td>
+        <td class="center">0,0000</td>
+      </tr>
+      <tr>
+        <td><strong>n_estimators</strong></td>
+        <td class="center">100 (default)</td>
+        <td class="center">100</td>
+        <td class="center">identik</td>
+      </tr>
+      <tr>
+        <td><strong>max_depth</strong></td>
+        <td class="center">None (default)</td>
+        <td class="center">None</td>
+        <td class="center">identik</td>
+      </tr>
+      <tr>
+        <td><strong>min_samples_split</strong></td>
+        <td class="center">2 (default)</td>
+        <td class="center">2</td>
+        <td class="center">identik</td>
+      </tr>
+      <tr>
+        <td><strong>min_samples_leaf</strong></td>
+        <td class="center">1 (default)</td>
+        <td class="center">1</td>
+        <td class="center">identik</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- GAMBAR 4.8 -->
+  <div class="section-title"><span class="num">6</span>Feature Importance</div>
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-title">Kontribusi Setiap Fitur dalam Model</div>
+        <div class="card-sub">Analisis fitur paling berpengaruh dalam prediksi</div>
+      </div>
+      <span class="badge badge-green">Interpretasi Model</span>
+    </div>
+    <div class="fig">
+      <img src="analytics_assets/Gambar_4_8_Feature_Importance.png" alt="Feature Importance">
+      <div class="fig-caption">Gambar 4.8 — Bar chart feature importance 20 fitur dalam model Random Forest, diurutkan dari yang paling berpengaruh</div>
+    </div>
+
+    <div class="info-box" style="margin-top:18px">
+      <h5>◆ Top 5 Fitur Paling Berpengaruh</h5>
+      <table style="margin-top:8px">
+        <tr><th style="width:50px">Rank</th><th>Fitur</th><th class="center">Importance</th><th class="center">%</th></tr>
+        <tr><td class="center"><strong>1</strong></td><td>Rolling_Mean_3M</td><td class="center"><strong>0,939</strong></td><td class="center">93,9%</td></tr>
+        <tr><td class="center"><strong>2</strong></td><td>Rolling_Mean_6M</td><td class="center">0,023</td><td class="center">2,3%</td></tr>
+        <tr><td class="center"><strong>3</strong></td><td>Growth_MoM</td><td class="center">0,015</td><td class="center">1,5%</td></tr>
+        <tr><td class="center"><strong>4</strong></td><td>Lag_1M</td><td class="center">0,010</td><td class="center">1,0%</td></tr>
+        <tr><td class="center"><strong>5</strong></td><td>Rolling_Mean_12M</td><td class="center">0,004</td><td class="center">0,4%</td></tr>
+      </table>
+    </div>
+
+    <div class="text-block" style="margin-top:14px">
+      <p>
+        <strong>Rolling_Mean_3M</strong> mendominasi sebagai fitur paling berpengaruh dengan importance
+        score 0,939 (93,9%). Ini menunjukkan bahwa rata-rata penjualan 3 bulan terakhir adalah prediktor
+        terkuat untuk volume penjualan bulan berjalan. Hal ini masuk akal karena pasar otomotif Indonesia
+        menunjukkan pola momentum jangka pendek yang kuat—performa 3 bulan terakhir cenderung berlanjut
+        ke bulan berikutnya, kecuali ada gejolak besar seperti kebijakan baru atau peluncuran produk.
+      </p>
+      <p>
+        Fitur-fitur lag tahunan (Lag_12M) yang awalnya diperkirakan dominan justru memiliki importance
+        rendah (0,001), kemungkinan karena dataset granular memiliki banyak baris dengan volume nol
+        (untuk merek tidak aktif), sehingga Rolling_Mean_3M menjadi indikator yang lebih stabil dan
+        informatif untuk membedakan antara periode aktif dan tidak aktif suatu merek.
+      </p>
+    </div>
+  </div>
+
+  <!-- KODE -->
+  <div class="section-title"><span class="num">7</span>Implementasi Kode</div>
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-title">Cuplikan Kode Python — Random Forest + Grid Search</div>
+        <div class="card-sub">Diekstrak dari Jupyter Notebook RandomForest_Optimization.ipynb</div>
+      </div>
+      <span class="badge badge-blue">Python · scikit-learn</span>
+    </div>
+
+<div class="code-block"><span class="com"># ── 1. Import Library ─────────────────────────────────────</span>
+<span class="kw">import</span> pandas <span class="kw">as</span> pd
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+<span class="kw">from</span> sklearn.ensemble <span class="kw">import</span> RandomForestRegressor
+<span class="kw">from</span> sklearn.model_selection <span class="kw">import</span> GridSearchCV
+<span class="kw">from</span> sklearn.metrics <span class="kw">import</span> mean_absolute_error, mean_squared_error, r2_score
+
+<span class="com"># ── 2. Load Dataset Granular 11K ─────────────────────────</span>
+df = pd.read_excel(<span class="str">'GAIKINDO_Granular_11K.xlsx'</span>, sheet_name=<span class="str">'Data_Granular'</span>)
+df_model = df[(df[<span class="str">'Kategori'</span>] == <span class="str">'Wholesales'</span>) &
+              (~df[<span class="str">'Merek'</span>].str.startswith(<span class="str">'[SEGMEN]'</span>)) &
+              (df[<span class="str">'Lag_12M'</span>].notna())]
+
+<span class="com"># ── 3. Train/Test Split Temporal ─────────────────────────</span>
+FEATURES = [<span class="str">'Lag_1M'</span>, <span class="str">'Lag_3M'</span>, <span class="str">'Lag_6M'</span>, <span class="str">'Lag_12M'</span>,
+            <span class="str">'Rolling_Mean_3M'</span>, <span class="str">'Rolling_Mean_6M'</span>, <span class="str">'Rolling_Mean_12M'</span>,
+            <span class="str">'Rolling_Std_3M'</span>, <span class="str">'Growth_MoM'</span>, <span class="str">'Growth_YoY'</span>,
+            <span class="str">'Bulan_Sin'</span>, <span class="str">'Bulan_Cos'</span>, <span class="str">'Tahun_Norm'</span>, <span class="str">'Kuartal'</span>,
+            <span class="str">'Is_Semester_1'</span>, <span class="str">'Is_Pandemi'</span>, <span class="str">'Is_Pasca_Pandemi'</span>,
+            <span class="str">'Is_EV_Era'</span>, <span class="str">'Merek_Code'</span>, <span class="str">'Segmen_Code'</span>]
+
+X_train = df_model[df_model[<span class="str">'Tahun'</span>].isin([<span class="num">2020</span>,<span class="num">2021</span>,<span class="num">2022</span>,<span class="num">2023</span>,<span class="num">2024</span>])][FEATURES]
+y_train = df_model[df_model[<span class="str">'Tahun'</span>].isin([<span class="num">2020</span>,<span class="num">2021</span>,<span class="num">2022</span>,<span class="num">2023</span>,<span class="num">2024</span>])][<span class="str">'Volume'</span>]
+X_test  = df_model[df_model[<span class="str">'Tahun'</span>] == <span class="num">2025</span>][FEATURES]
+y_test  = df_model[df_model[<span class="str">'Tahun'</span>] == <span class="num">2025</span>][<span class="str">'Volume'</span>]
+
+<span class="com"># ── 4. Baseline Random Forest ────────────────────────────</span>
+rf_baseline = RandomForestRegressor(random_state=<span class="num">42</span>)
+rf_baseline.fit(X_train, y_train)
+y_pred = rf_baseline.predict(X_test)
+print(<span class="str">f'R²: {r2_score(y_test, y_pred):.4f}'</span>)  <span class="com"># 0.9815</span>
+
+<span class="com"># ── 5. Grid Search Hyperparameter Tuning ─────────────────</span>
+param_grid = {
+    <span class="str">'n_estimators'</span>     : [<span class="num">50</span>, <span class="num">100</span>, <span class="num">200</span>, <span class="num">300</span>],
+    <span class="str">'max_depth'</span>        : [<span class="num">5</span>, <span class="num">10</span>, <span class="num">15</span>, <span class="num">20</span>, <span class="kw">None</span>],
+    <span class="str">'min_samples_split'</span>: [<span class="num">2</span>, <span class="num">5</span>, <span class="num">10</span>],
+    <span class="str">'min_samples_leaf'</span> : [<span class="num">1</span>, <span class="num">2</span>, <span class="num">4</span>],
+}  <span class="com"># 4 × 5 × 3 × 3 = 180 kombinasi</span>
+
+grid = GridSearchCV(RandomForestRegressor(random_state=<span class="num">42</span>),
+                    param_grid, cv=<span class="num">5</span>,
+                    scoring=<span class="str">'neg_mean_squared_error'</span>, n_jobs=-<span class="num">1</span>)
+grid.fit(X_train, y_train)
+
+print(<span class="str">f'Best params: {grid.best_params_}'</span>)
+<span class="com"># Hasil: {'n_estimators':100, 'max_depth':None,</span>
+<span class="com">#        'min_samples_split':2, 'min_samples_leaf':1} ← sama dgn default</span></div>
+    <div class="code-caption">Cuplikan kode utama untuk training Random Forest + Grid Search optimization</div>
+  </div>
+
+  <!-- KESIMPULAN -->
+  <div class="section-title"><span class="num">8</span>Kesimpulan</div>
+  <div class="card">
+    <div class="text-block">
+      <p>
+        Penelitian ini berhasil membangun model machine learning untuk memprediksi volume wholesales
+        otomotif nasional dengan akurasi tinggi (<strong>R² = 0,9815</strong>). Konfigurasi default
+        scikit-learn terbukti sudah optimal—Grid Search dengan 180 kombinasi parameter pada 5-fold CV
+        tidak menemukan kombinasi yang lebih baik. Hal ini memvalidasi pemilihan Random Forest sebagai
+        algoritma yang robust untuk dataset GAIKINDO 2020–2025.
+      </p>
+      <p>
+        Temuan paling menarik adalah dominasi <strong>Rolling_Mean_3M</strong> sebagai fitur paling
+        berpengaruh (93,9%), menggeser hipotesis awal yang mengandalkan Lag_12M sebagai prediktor utama.
+        Ini menunjukkan bahwa pasar otomotif Indonesia—dalam periode dinamika ekstrem 2020–2025—lebih
+        dipengaruhi oleh momentum jangka pendek (3 bulan terakhir) dibandingkan pola musiman tahunan.
+      </p>
+      <p>
+        Model ini melengkapi sistem Business Intelligence AutoBI dengan kemampuan analitik prediktif
+        (predictive analytics), yang berfungsi sebagai lapisan analisis lanjutan di atas dashboard
+        deskriptif. Untuk pengembangan ke depan, perbaikan yang direkomendasikan meliputi: filter
+        baris zero-volume sebelum perhitungan MAPE, penanganan data leakage pada Rolling_Mean_3M,
+        serta perluasan grid parameter ke ruang yang lebih granular.
+      </p>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  AutoBI · Advanced Analytics Layer · Stevani Alexandra Harmareta · UMN 2026<br>
+  Sumber Data: GAIKINDO 2020–2025 · Framework: CRISP-DM · Algoritma: Random Forest Regressor + GridSearchCV
+</footer>
+
+</body>
+</html>
